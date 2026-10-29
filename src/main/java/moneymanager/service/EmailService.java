@@ -1,37 +1,71 @@
 package moneymanager.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final RestClient restClient = RestClient.create();
 
-    @Value("${spring.mail.properties.mail.smtp.from}")
+    @Value("${brevo.api-key}")
+    private String apiKey;
+
+    @Value("${brevo.sender-email}")
     private String fromEmail;
 
     public void sendEmail(String to, String subject, String body) {
+
+        Map<String, Object> payload = Map.of(
+                "sender", Map.of(
+                        "name", "Money Manager",
+                        "email", fromEmail
+                ),
+                "to", List.of(
+                        Map.of("email", to)
+                ),
+                "subject", subject,
+                "htmlContent", body
+        );
+
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body);
-            mailSender.send(message);
+            restClient.post()
+                    .uri("https://api.brevo.com/v3/smtp/email")
+                    .header("api-key", apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity();
 
-            log.info("Email sent successfully to: {}", to);
-            System.out.println("Email sent successfully to: " + to);
+            log.info("Email accepted by Brevo for: {}", to);
 
-        } catch(Exception e) {
-            log.error("Email sending failed", e);
-            throw new RuntimeException("Failed to send email: " + e.getMessage());
+        } catch (RestClientResponseException e) {
+            log.error(
+                    "Brevo API error. Status: {}, Response: {}",
+                    e.getStatusCode(),
+                    e.getResponseBodyAsString()
+            );
+
+            throw new RuntimeException(
+                    "Brevo rejected the email request", e
+            );
+
+        } catch (RestClientException e) {
+            log.error("Could not connect to Brevo API", e);
+
+            throw new RuntimeException(
+                    "Could not connect to Brevo email service", e
+            );
         }
     }
 }
