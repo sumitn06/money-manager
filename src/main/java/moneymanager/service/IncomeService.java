@@ -49,7 +49,17 @@ public class IncomeService {
         return list.stream().map(this::toDTO).toList();
     }
 
-    // Delete expense by id for current user
+    // Get all incomes for current user
+    public List<IncomeDTO> getAllIncomesForCurrentUser() {
+        ProfileEntity profile = profileService.getCurrentProfile();
+
+        List<IncomeEntity> list =
+                incomeRepository.findByProfileIdOrderByDateDesc(profile.getId());
+
+        return list.stream().map(this::toDTO).toList();
+    }
+
+    // Delete income by id for current user
     public void deleteIncome(Long incomeId) {
         ProfileEntity profile = profileService.getCurrentProfile();
         IncomeEntity income = incomeRepository.findById(incomeId)
@@ -73,7 +83,7 @@ public class IncomeService {
     public BigDecimal getTotalIncomesForCurrentUser() {
         ProfileEntity profile = profileService.getCurrentProfile();
 
-        BigDecimal totalIncomes = incomeRepository.findTotalExpenseByProfileId(profile.getId());
+        BigDecimal totalIncomes = incomeRepository.findTotalIncomeByProfileId(profile.getId());
         return totalIncomes != null ? totalIncomes : BigDecimal.ZERO;
     }
 

@@ -6,7 +6,6 @@ import moneymanager.entity.CategoryEntity;
 import moneymanager.entity.ProfileEntity;
 import moneymanager.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
@@ -57,6 +56,7 @@ public class CategoryService {
 
         existingCategory.setName(categoryDTO.getName());
         existingCategory.setIcon(categoryDTO.getIcon());
+        existingCategory.setType(categoryDTO.getType());
         existingCategory = categoryRepository.save(existingCategory);
 
         return toDTO(existingCategory);
@@ -83,6 +83,4 @@ public class CategoryService {
                 .type(entity.getType())
                 .build();
     }
-
-
 }
