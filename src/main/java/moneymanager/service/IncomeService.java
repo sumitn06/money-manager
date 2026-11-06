@@ -53,8 +53,7 @@ public class IncomeService {
     public List<IncomeDTO> getAllIncomesForCurrentUser() {
         ProfileEntity profile = profileService.getCurrentProfile();
 
-        List<IncomeEntity> list =
-                incomeRepository.findByProfileIdOrderByDateDesc(profile.getId());
+        List<IncomeEntity> list = incomeRepository.findByProfileIdOrderByDateDesc(profile.getId());
 
         return list.stream().map(this::toDTO).toList();
     }
@@ -75,7 +74,14 @@ public class IncomeService {
     public List<IncomeDTO> getLatestFiveIncomesForCurrentUser() {
         ProfileEntity profile = profileService.getCurrentProfile();
 
-        List<IncomeEntity> income = incomeRepository.findTopFiveByProfileIdOrderByDateDesc(profile.getId());
+        List<IncomeEntity> income =
+                incomeRepository.findTopFiveByProfileIdOrderByDateDesc(profile.getId());
+
+        System.out.println("Profile ID: " + profile.getId());
+        System.out.println("Income count: " + income.size());
+        income.forEach(item ->
+                System.out.println(item.getName() + " - " + item.getDate()));
+
         return income.stream().map(this::toDTO).toList();
     }
 
@@ -87,7 +93,7 @@ public class IncomeService {
         return totalIncomes != null ? totalIncomes : BigDecimal.ZERO;
     }
 
-    //Filter expenses
+    //Filter Incomes
     public List<IncomeDTO> filterIncomes(LocalDate startDate, LocalDate endDate, String keyword, Sort sort) {
         ProfileEntity profile = profileService.getCurrentProfile();
 
